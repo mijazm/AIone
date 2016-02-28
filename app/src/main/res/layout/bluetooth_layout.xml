@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="200dp">
+
+    <ImageButton
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/stop_button"
+        android:background="@color/transparent"
+        android:layout_below="@+id/forward_button"
+        android:layout_alignLeft="@+id/forward_button"
+        android:layout_alignStart="@+id/forward_button"
+        android:layout_marginTop="40dp"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/forward_button"
+        android:src="@drawable/up_button"
+        android:background="@color/transparent"
+        android:layout_centerHorizontal="true" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/backward_button"
+        android:src="@drawable/down_button"
+        android:background="@color/transparent"
+        android:layout_below="@+id/right_button"
+        android:layout_alignLeft="@+id/stop_button"
+        android:layout_alignStart="@+id/stop_button"
+        android:layout_marginTop="40dp"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/left_button"
+        android:src="@drawable/left_button"
+        android:background="@color/transparent"
+        android:layout_alignTop="@+id/stop_button"
+        android:layout_toLeftOf="@+id/stop_button"
+        android:layout_toStartOf="@+id/stop_button"
+        android:layout_marginRight="40dp"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/right_button"
+        android:src="@drawable/right_button"
+        android:background="@color/transparent"
+        android:layout_alignTop="@+id/stop_button"
+        android:layout_toRightOf="@+id/stop_button"
+        android:layout_toEndOf="@+id/stop_button"
+        android:layout_marginLeft="40dp"/>
+</RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp">
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginRight="150dp"
+        android:background="#bbeefd"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/connect_button"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+
+    <ImageView
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:scaleType="fitXY"
+        android:id="@+id/bluetooth_rc_title"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/bluetooth_rc"
+        android:layout_marginTop="20dp"/>
+
+</RelativeLayout>
