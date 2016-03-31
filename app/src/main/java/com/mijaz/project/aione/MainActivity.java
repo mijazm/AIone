@@ -14,17 +14,20 @@ public class MainActivity extends AppCompatActivity {
     ListView list;
     String[] application_title = {
             "Bluetooth RC",
-            "NetBot"
+            "NetBot",
+            "SoundBot"
     };
 
     String[] application_description = {
             "Use your phone as remote control!",
-            "Control AIone from a webpage!"
+            "Control AIone from a webpage!",
+            "Control AIone using voice command!"
     };
 
     Integer[] application_image = {
             R.drawable.bluetooth,
-            R.drawable.internet
+            R.drawable.internet,
+            R.drawable.voice_control
     };
 
 
@@ -50,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
                     case 1:
                         Intent Netbot = new Intent(getApplicationContext(),NetBot.class);
                         startActivity(Netbot);
-
+                    case 2:
+                        Intent Soundbot = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+                        startActivity(Soundbot);
                 }
             }
         });

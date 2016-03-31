@@ -1,3 +1,33 @@
+/* ====================================================================
+ * Copyright (c) 2014 Alpha Cephei Inc.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ALPHA CEPHEI INC. ``AS IS'' AND
+ * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY
+ * NOR ITS EMPLOYEES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ====================================================================
+ */
+
 package com.mijaz.project.aione;
 
 import android.app.Activity;
@@ -6,36 +36,38 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
-import android.os.PowerManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.net.*;
 
-public class NetBot extends Activity implements AdapterView.OnItemSelectedListener {
+import edu.cmu.pocketsphinx.Assets;
+import edu.cmu.pocketsphinx.Hypothesis;
+import edu.cmu.pocketsphinx.RecognitionListener;
+import edu.cmu.pocketsphinx.SpeechRecognizer;
+
+import static android.widget.Toast.makeText;
+import static edu.cmu.pocketsphinx.SpeechRecognizerSetup.defaultSetup;
+
+public class PocketSphinxActivity extends Activity implements RecognitionListener,AdapterView.OnItemSelectedListener
+{
+    private static final String DIGITS_SEARCH = "digits";
+    private SpeechRecognizer recognizer;
 
     BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mmSocket;
@@ -47,22 +79,16 @@ public class NetBot extends Activity implements AdapterView.OnItemSelectedListen
 
     Thread workerThread;
 
-    URL url = null;
-
     boolean bready=false;
     Boolean stopWorker = false;
 
-    boolean website_connected = false;
-
-
     protected PowerManager.WakeLock mWakeLock;
 
-
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_net_bot);
+    public void onCreate(Bundle state)
+    {
+        super.onCreate(state);
+        setContentView(R.layout.sphinx_main);
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Tag");
@@ -83,45 +109,89 @@ public class NetBot extends Activity implements AdapterView.OnItemSelectedListen
             }
         });
 
-        final EditText url_text = (EditText)findViewById(R.id.web_address);
-        final ImageView connection_notification = (ImageView)findViewById(R.id.connection_notification);
-        connection_notification.setImageResource(R.drawable.connection_off);
-        final Button web_connect_button = (Button)findViewById(R.id.web_connect_button);
+        ((TextView) findViewById(R.id.caption_text)).setText("Preparing the recognizer");
 
-        web_connect_button.setText("CONNECT");
-        web_connect_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(!website_connected){
-                    try {
-                        connection_notification.setImageResource(R.drawable.connection_on);
-                        stopWorker=false;
-                        url = new URL(url_text.getText().toString());
-                        web_connect_button.setText("DISCONNECT");
+        try
+        {
+            Assets assets = new Assets(PocketSphinxActivity.this);
+            File assetDir = assets.syncAssets();
+            setupRecognizer(assetDir);
+        }
+        catch (IOException e)
+        {
+            // oops
+        }
 
-                        connectToWebsiteThread(url);
-                    }
-                    catch( MalformedURLException e){
+        ((TextView) findViewById(R.id.caption_text)).setText("Say up, down, left, right, forwards, backwards");
 
-                        Toast.makeText(getApplicationContext(), "Enter a valid Address", Toast.LENGTH_SHORT).show();
-                    }
+        reset();
+    }
 
-                }
-                else{
-                    stopWorker=true;
-                    web_connect_button.setText("CONNECT");
-                    connection_notification.setImageResource(R.drawable.connection_off);
-                    c.disconnect();
-                    website_connected=false;
-                }
-            }
-        });
+    @Override
+    public void onPartialResult(Hypothesis hypothesis)
+    {
+        if (hypothesis != null)
+        {
+            String text = hypothesis.getHypstr();
+            makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+        }
 
+    }
 
-        check_bluetooth();
+    @Override
+    public void onResult(Hypothesis hypothesis)
+    {
+    }
 
-        retrievePairedDevices();
+    @Override
+    public void onError(Exception e) {
 
+    }
+
+    @Override
+    public void onTimeout() {
+
+    }
+
+    @Override
+    public void onBeginningOfSpeech()
+    {
+    }
+
+    @Override
+    public void onEndOfSpeech()
+    {
+        reset();
+    }
+
+    private void setupRecognizer(File assetsDir) throws IOException
+    {
+        File modelsDir = new File(assetsDir, "models");
+
+        recognizer = defaultSetup()
+                .setAcousticModel(new File(assetsDir, "en-us-ptm"))
+                .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
+
+                        // To disable logging of raw audio comment out this call (takes a lot of space on the device)
+                .setRawLogDir(assetsDir)
+
+                        // Threshold to tune for keyphrase to balance between false alarms and misses
+                .setKeywordThreshold(1e-45f)
+
+                        // Use context-independent phonetic search, context-dependent is too slow for mobile
+                .setBoolean("-allphone_ci", true)
+
+                .getRecognizer();
+        recognizer.addListener(this);
+
+        File digitsGrammar = new File(assetsDir, "digits.gram");
+        recognizer.addKeywordSearch(DIGITS_SEARCH, digitsGrammar);
+    }
+
+    private void reset()
+    {
+        recognizer.stop();
+        recognizer.startListening(DIGITS_SEARCH);
     }
 
     @Override
@@ -227,74 +297,7 @@ public class NetBot extends Activity implements AdapterView.OnItemSelectedListen
         bready = false;
     }
 
-    void connectToWebsiteThread(final URL url)
-    {
-        website_connected = true;
-
-        workerThread = new Thread(new Runnable() {
-          @Override
-          public void run() {
-
-              while(!Thread.currentThread().isInterrupted() && !stopWorker)
-              connectAndAquireData(url);
-          }
-      });
-
-        workerThread.start();
-    }
-
-    void connectAndAquireData(final URL url){
-        try {
-            c = (HttpURLConnection) url.openConnection();
-            c.setRequestMethod("GET");
-            c.connect();
-            InputStream in = c.getInputStream();
-
-            final BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-            int r;
-            while((r=br.read())!=-1){
-                command = (char)r;
-            }
-
-
-
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    TextView text = (TextView) findViewById(R.id.textView);
-                    text.setText(Character.toString(command));
-                    sendMessage(Character.toString(command));
-                    try {
-                        br.close();
-                        c.disconnect();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            if(stopWorker) {
-                c.disconnect();
-                website_connected = false;
-            }
-        }
-        catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        catch( NullPointerException e){
-            Log.i("MyActivity", "wrong address entered");
-
-
-        }
-
-
-
-    }
-
-    /*
+     /*
      * Some Overrides for stability
      */
 
@@ -347,6 +350,4 @@ public class NetBot extends Activity implements AdapterView.OnItemSelectedListen
             mWakeLock.release();
         }
     }
-
-
 }
