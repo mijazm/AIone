@@ -1,0 +1,5 @@
+go forward/1e-40/
+stop /1e-3/
+turn left /1e-30/
+turn right /1e-20/
+go back /1e-10/
